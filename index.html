@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Painel N7 - WhatsApp</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif;}
+body{background:#f0f2f5;color:#333;display:flex;min-height:100vh;}
+nav{width:220px;background:#1f1f2e;color:#fff;display:flex;flex-direction:column;padding:20px;}
+nav h2{margin-bottom:20px;font-size:1.2rem;text-align:center;}
+nav button{margin-bottom:10px;padding:10px;border:none;background:#2a2a40;color:#fff;border-radius:6px;cursor:pointer;text-align:left;}
+nav button:hover{background:#414158;}
+main{flex:1;padding:30px;overflow-y:auto;}
+.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+input,textarea,select,button{padding:10px;margin:5px 0;width:100%;border-radius:6px;border:1px solid #ccc;}
+button.btn-add{background:#1f1f2e;color:#fff;}
+button.btn-remove{background:#e74c3c;color:#fff;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{padding:10px;text-align:left;border-bottom:1px solid #ddd;}
+th{background:#f4f4f4;}
+.status-ok{color:green;font-weight:bold;}
+.status-pendente{color:orange;font-weight:bold;}
+#alertContainer{position:fixed;top:10px;right:10px;width:320px;z-index:1000;}
+.alert{background:#fffae5;padding:10px;margin-bottom:10px;border-left:5px solid #ffc107;border-radius:6px;box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+</style>
+</head>
+<body>
+
+<nav>
+<h2>N7 Painel</h2>
+<button onclick="mostrarAba('clientes')">Clientes</button>
+<button onclick="mostrarAba('postagens')">Postagens</button>
+<button onclick="mostrarAba('cronograma')">Cronograma</button>
+<button onclick="mostrarAba('leads')">Leads</button>
+<button onclick="mostrarAba('remarketing')">Remarketing</button>
+<button onclick="mostrarAba('disparo')">Disparo</button>
+<button onclick="mostrarAba('faturamento')">Faturamento</button>
+</nav>
+
+<main>
+<div id="alertContainer"></div>
+
+<!-- CLIENTES -->
+<div id="clientes" class="card">
+<h2>Adicionar Cliente</h2>
+<input id="clienteNome" placeholder="Nome">
+<input id="clienteTelefone" placeholder="Telefone">
+<input id="clienteValor" type="number" placeholder="Valor mensal">
+<input id="clienteEntrada" type="date">
+<button class="btn-add" onclick="adicionarCliente()">Adicionar</button>
+
+<h2>Lista de Clientes</h2>
+<table>
+<thead><tr><th>Cliente</th><th>Telefone</th><th>Valor</th><th>Entrada</th><th>Status</th><th>Ação</th></tr></thead>
+<tbody id="listaClientes"></tbody>
+</table>
+</div>
+
+<!-- POSTAGENS -->
+<div id="postagens" class="card" style="display:none">
+<h2>Adicionar Postagem</h2>
+<select id="postCliente"></select>
+<input id="postData" type="date">
+<input id="postHora" type="time">
+<input id="postDescricao" placeholder="Descrição">
+<input id="postLink" placeholder="Link">
+<button class="btn-add" onclick="adicionarPostagem()">Adicionar</button>
+
+<h2>Postagens</h2>
+<table>
+<thead><tr><th>Cliente</th><th>Data</th><th>Hora</th><th>Descrição</th><th>Link</th><th>Status</th><th>Ação</th></tr></thead>
+<tbody id="listaPostagens"></tbody>
+</table>
+</div>
+
+<!-- CRONOGRAMA -->
+<div id="cronograma" class="card" style="display:none">
+<h2>Cronograma</h2>
+<select id="cronCliente" onchange="renderCronograma()"></select>
+<input id="cronData" type="date">
+<input id="cronHora" type="time">
+<input id="cronTema" placeholder="Tema">
+<input id="cronDescricao" placeholder="Descrição">
+<button class="btn-add" onclick="adicionarCronograma()">Adicionar</button>
+<table>
+<thead><tr><th>Data</th><th>Hora</th><th>Tema</th><th>Descrição</th><th>Status</th><th>Ação</th></tr></thead>
+<tbody id="tabelaCronograma"></tbody>
+</table>
+</div>
+
+<!-- LEADS -->
+<div id="leads" class="card" style="display:none">
+<h2>Leads</h2>
+<input id="leadNome" placeholder="Nome">
+<input id="leadTelefone" placeholder="Telefone">
+<input id="leadData" type="date">
+<select id="leadStatus"><option value="pendente">Pendente</option><option value="contato">Contato feito</option></select>
+<button class="btn-add" onclick="adicionarLead()">Adicionar</button>
+<table>
+<thead><tr><th>Nome</th><th>Telefone</th><th>Data</th><th>Status</th><th>Ação</th></tr></thead>
+<tbody id="listaLeads"></tbody>
+</table>
+</div>
+
+<!-- REMARKETING -->
+<div id="remarketing" class="card" style="display:none">
+<h2>Remarketing</h2>
+<table>
+<thead><tr><th>Nome</th><th>Telefone</th><th>Mensagem</th><th>Ação</th></tr></thead>
+<tbody id="listaRemarketing"></tbody>
+</table>
+</div>
+
+<!-- DISPARO -->
+<div id="disparo" class="card" style="display:none">
+<h2>Disparo de Mensagens WhatsApp</h2>
+<textarea id="msgDisparo" placeholder="Mensagem padrão"></textarea>
+<h3>Selecionar Clientes</h3>
+<div id="listaContatosDisparo"></div>
+<button class="btn-add" onclick="dispararMensagem()">Enviar WhatsApp</button>
+</div>
+
+<!-- FATURAMENTO -->
+<div id="faturamento" class="card" style="display:none">
+<h2>Faturamento</h2>
+<input id="investimentoTotal" type="number" placeholder="Investimento mensal">
+<button class="btn-add" onclick="calcularFaturamento()">Calcular</button>
+<p>Bruto: <span id="faturamentoBruto">R$ 0</span></p>
+<p>Líquido: <span id="faturamentoLiquido">R$ 0</span></p>
+</div>
+
+<script>
+// ---------- Alertas ----------
+function criarAlerta(msg){const c=document.getElementById("alertContainer");const d=document.createElement("div");d.className="alert";d.innerText=msg;c.appendChild(d);setTimeout(()=>d.remove(),7000);}
+
+// ---------- Dados ----------
+let clientes=JSON.parse(localStorage.getItem("clientes"))||[];
+let postagens=JSON.parse(localStorage.getItem("postagens"))||[];
+let cronogramas=JSON.parse(localStorage.getItem("cronogramas"))||{};
+let leads=JSON.parse(localStorage.getItem("leads"))||[];
+
+function salvar(){
+  localStorage.setItem("clientes",JSON.stringify(clientes));
+  localStorage.setItem("postagens",JSON.stringify(postagens));
+  localStorage.setItem("cronogramas",JSON.stringify(cronogramas));
+  localStorage.setItem("leads",JSON.stringify(leads));
+}
+
+// ---------- Abas ----------
+function mostrarAba(aba){
+  ["clientes","postagens","cronograma","leads","remarketing","disparo","faturamento"].forEach(a=>{
+    document.getElementById(a).style.display=a===aba?"block":"none";
+  });
+}
+
+// ---------- Clientes ----------
+function atualizarClientes(){
+  const tbody=document.getElementById("listaClientes"); tbody.innerHTML="";
+  clientes.forEach((c,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${c.nome}</td><td>${c.telefone}</td><td>R$ ${c.valor}</td><td>${c.entrada}</td><td>${c.status||'ativo'}</td>
+    <td><button class="btn-remove" onclick="removerCliente(${i})">Remover</button></td>`;
+    tbody.appendChild(tr);
+  });
+
+  const postSelect=document.getElementById("postCliente");
+  const cronSelect=document.getElementById("cronCliente");
+  const disparoDiv=document.getElementById("listaContatosDisparo");
+  [postSelect,cronSelect].forEach(s=>{
+    s.innerHTML="";
+    clientes.forEach(c=>{
+      const o=document.createElement("option");o.value=c.nome;o.innerText=c.nome;s.appendChild(o);
+    });
+  });
+  // Atualizar lista de clientes para disparo
+  disparoDiv.innerHTML="";
+  clientes.forEach((c,i)=>{
+    const d=document.createElement("div");
+    d.innerHTML=`<input type="checkbox" id="disp${i}" value="${c.telefone}"> ${c.nome} - ${c.telefone}`;
+    disparoDiv.appendChild(d);
+  });
+}
+
+function adicionarCliente(){
+  const n=document.getElementById("clienteNome").value;
+  const t=document.getElementById("clienteTelefone").value;
+  const v=document.getElementById("clienteValor").value;
+  const e=document.getElementById("clienteEntrada").value;
+  if(!n||!t||!v||!e){criarAlerta("Preencha todos os campos!");return;}
+  clientes.push({nome:n,telefone:t,valor:v,entrada:e,status:"ativo"});
+  salvar(); atualizarClientes();
+  document.getElementById("clienteNome").value="";
+  document.getElementById("clienteTelefone").value="";
+  document.getElementById("clienteValor").value="";
+  document.getElementById("clienteEntrada").value="";
+}
+
+function removerCliente(i){clientes.splice(i,1);salvar();atualizarClientes();}
+atualizarClientes();
+
+// ---------- Disparo WhatsApp ----------
+function dispararMensagem(){
+  const msg=document.getElementById("msgDisparo").value;
+  if(!msg){criarAlerta("Escreva uma mensagem!"); return;}
+  const checkboxes=document.querySelectorAll("#listaContatosDisparo input[type=checkbox]:checked");
+  if(checkboxes.length===0){criarAlerta("Selecione pelo menos um cliente!"); return;}
+  checkboxes.forEach(c=>{
+    const numero=c.value.replace(/\D/g,''); // remove não numéricos
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`,"_blank");
+  });
+  criarAlerta("Mensagens abertas no WhatsApp!");
+}
+</script>
+
+</body>
+</html>
